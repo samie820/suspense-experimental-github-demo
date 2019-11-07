@@ -1,5 +1,6 @@
 import React, { createContext, lazy, useState, useCallback, useContext, useEffect, useTransition } from 'react';
-import { unstable_runWithPriority, unstable_UserBlockingPriority } from 'scheduler';
+import NProgress from 'nprogress';
+import { unstable_runWithPriority, unstable_IdlePriority } from 'scheduler';
 import Spinner from './Spinner';
 
 if (window.location.pathname === '/') {
@@ -66,7 +67,7 @@ export default function createRouter(routes) {
     useEffect(() => {
       let handlePopState = () => {
         // Note: this is a bit icky. We don't have a stable API for this yet.
-        unstable_runWithPriority(unstable_UserBlockingPriority, () => {
+        unstable_runWithPriority(unstable_IdlePriority, () => {
           // Handle the browser Back Button.
           startTransition(() => {
             navigate(window.location.pathname, false)
@@ -105,8 +106,15 @@ export default function createRouter(routes) {
       e.preventDefault();
       startTransition(() => {
         navigate(url, true);
+        NProgress.start();
       });
     }
+  
+    React.useEffect(() => {
+      if (!isPending) {
+        NProgress.done();
+      }
+    }, [isPending]);
 
     return (
       <span>
